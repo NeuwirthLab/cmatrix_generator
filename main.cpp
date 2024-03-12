@@ -1,0 +1,117 @@
+#include <iostream>
+#include <vector>
+#include <random>
+#include <type_traits>
+#include <fstream>
+#include <iomanip>
+#include <getopt.h>
+
+
+#define BENCHMARK
+
+template <typename T>
+std::vector<std::vector<T>> generate_dense_matrix(int rows, int cols, int num_non_zero, int max_value) {
+    std::vector<std::vector<T>> matrix(rows, std::vector<T>(cols, 0));
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    for(int i = 0; i < num_non_zero; ++i) {
+        std::uniform_int_distribution<int> row_dist(0, rows - 1);
+        std::uniform_int_distribution<int> col_dist(0, cols - 1);
+        int row = row_dist(gen);
+        int col = col_dist(gen);
+        if (std::is_same<T, int>::value) {
+            std::uniform_int_distribution<int> val_dist(0, max_value);
+            matrix[row][col] = val_dist(gen);
+        } else {
+            std::uniform_real_distribution<T> val_dist(0, max_value);
+            matrix[row][col] = val_dist(gen);
+        }
+    }
+    return matrix;
+}
+
+template <typename T>
+void write_matrix_market_format(const std::vector<std::vector<T>>& matrix, const std::string& file_name) {
+    std::ofstream file(file_name);
+    file << "%%MatrixMarket matrix coordinate real general" << std::endl;
+    file << matrix.size() << " " << matrix[0].size() << " " << matrix.size() * matrix[0].size() << std::endl;
+    for (int i = 0; i < matrix.size(); ++i) {
+        for (int j = 0; j < matrix[0].size(); ++j) {
+            file << i << " " << j << " " << matrix[i][j] << std::endl;
+        }
+    }
+    file.close();
+}
+
+
+std::ifstream::pos_type get_filesize(const char* filename) {
+    std::ifstream in(filename, std::ifstream ::ate | std::ifstream::binary);
+    return in.tellg();
+}
+
+int main(int argc, char* argv[]) {
+    std::filesystem::path write_file_path{};
+    std::filesystem::path read_file_path{};
+    int cols, rows;
+    const char* const short_opts = "i:o:c:r:";
+    static const struct option long_opts[] = {
+            {"input", required_argument, nullptr, 'i'},
+            {"output", required_argument, nullptr, 'o'},
+            {"cols", required_argument, nullptr, 'c'},
+            {"rows", required_argument, nullptr, 'r'},
+
+    };
+    while (true) {
+        const auto opt =
+                getopt_long(argc, argv, short_opts, long_opts, nullptr);
+        if (opt == -1)
+            break;
+        switch (opt) {
+            case 'i':
+                read_file_path = optarg;
+                break;
+            case 'o':
+                write_file_path = optarg;
+                break;
+            case 'c':
+                cols = std::stoi(optarg);
+                break;
+            case 'r':
+                rows = std::stoi(optarg);
+                break;
+            default:
+                std::cerr << "Parameter unsupported\n";
+                std::terminate();
+        }
+    }
+
+    if (write_file_path.empty()) {
+        std::cerr << "no output file path given" << std::endl;
+        std::terminate();
+    }
+    if (read_file_path.empty()) {
+        std::cerr << "no input file path given" << std::endl;
+        std::terminate();
+    }
+    if (cols <= 0 || rows <= 0) {
+        std::cerr << "invalid matrix dimensions" << std::endl;
+        std::terminate();
+    }
+    std::vector<std::vector<double>> matrix = generate_dense_matrix<double>(cols, rows, cols*rows, 1);
+#if defined(BENCHMARK)
+    auto t_begin = std::chrono::high_resolution_clock::now();
+#endif
+    write_matrix_market_format(matrix, write_file_path);
+#if defined(BENCHMARK)
+    auto t_end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(t_end - t_begin);
+    std::cout <<  get_filesize((char*)write_file_path.c_str())<< std::endl;
+    std::cout << "Elapsed time for generated code " << duration.count() << " seconds" << std::endl;
+    auto f_size = get_filesize((char*)write_file_path.c_str());
+    std::cout << "Matrix dimensions: " << rows << "x" << cols << std::endl;
+    std::cout << "File size (Byte): " << f_size << std::endl;
+    std::cout << "Bandwidth (Byte/s): " << f_size / duration.count() << std::endl;
+#endif
+    return 0;
+}
+
