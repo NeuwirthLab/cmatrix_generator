@@ -50,6 +50,14 @@ std::ifstream::pos_type get_filesize(const char* filename) {
     return in.tellg();
 }
 
+std::string get_file_name_from_rows_and_cols(int rows, int cols, bool is_dense) {
+    if (is_dense) {
+        return "dense_matrix_" + std::to_string(rows) + "x" + std::to_string(cols) + ".mtx";
+    } else {
+        return "sparse_matrix_" + std::to_string(rows) + "x" + std::to_string(cols) + ".mtx";
+    }
+}
+
 int main(int argc, char* argv[]) {
     std::filesystem::path write_file_path{};
     std::filesystem::path read_file_path{};
@@ -102,6 +110,8 @@ int main(int argc, char* argv[]) {
 #if defined(BENCHMARK)
     auto t_begin = std::chrono::high_resolution_clock::now();
 #endif
+    std::string filename = get_file_name_from_rows_and_cols(rows, cols, true);
+    write_file_path += filename;
     write_matrix_market_format(matrix, write_file_path);
 #if defined(BENCHMARK)
     auto t_end = std::chrono::high_resolution_clock::now();
