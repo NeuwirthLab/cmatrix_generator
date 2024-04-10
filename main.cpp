@@ -5,13 +5,14 @@
 #include <fstream>
 #include <iomanip>
 #include <getopt.h>
+#include <filesystem>
 
 
 #define BENCHMARK
 
 template <typename T>
-std::vector<std::vector<T>> generate_dense_matrix(int rows, int cols, int num_non_zero, int max_value) {
-    std::vector<std::vector<T>> matrix(rows, std::vector<T>(cols, 0));
+std::vector<std::vector<T> > generate_dense_matrix(int rows, int cols, int num_non_zero, int max_value) {
+    std::vector<std::vector<T> > matrix(rows, std::vector<T>(cols, 0));
     std::random_device rd;
     std::mt19937 gen(rd());
     for(int i = 0; i < num_non_zero; ++i) {
@@ -31,7 +32,7 @@ std::vector<std::vector<T>> generate_dense_matrix(int rows, int cols, int num_no
 }
 
 template <typename T>
-void write_matrix_market_format(const std::vector<std::vector<T>>& matrix, const std::string& file_name) {
+void write_matrix_market_format(const std::vector<std::vector<T> >& matrix, const std::string& file_name) {
     std::ofstream file(file_name);
     file << "%%MatrixMarket matrix coordinate real general" << std::endl;
     file << matrix.size() << " " << matrix[0].size() << " " << matrix.size() * matrix[0].size() << std::endl;
