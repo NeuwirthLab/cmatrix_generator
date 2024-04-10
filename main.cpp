@@ -130,11 +130,12 @@ int main(int argc, char *argv[]) {
     if (copy_flag) {
         std::cout << "copy flag is set" << std::endl;
     }
-    std::vector<std::vector<double>> matrix = generate_dense_matrix<double>(cols, rows, cols * rows, 1);
+
     std::string filename = get_file_name_from_rows_and_cols(rows, cols, true);
     write_file_path += filename;
     read_file_path += filename;
     if (!copy_flag) {
+        std::vector<std::vector<double>> matrix = generate_dense_matrix<double>(cols, rows, cols * rows, 1);
 #if defined(BENCHMARK)
         auto t_begin = std::chrono::high_resolution_clock::now();
 #endif
@@ -151,7 +152,6 @@ int main(int argc, char *argv[]) {
 #endif
     } else {
         std::cout << "copying the file" << std::endl;
-        write_matrix_market_format(matrix, read_file_path);
 #if defined(BENCHMARK)
         auto t_begin = std::chrono::high_resolution_clock::now();
 #endif
