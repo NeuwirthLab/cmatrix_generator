@@ -34,13 +34,13 @@ std::vector<std::vector<T> > generate_dense_matrix(int rows, int cols, int num_n
 }
 
 template<typename T>
-void write_matrix_market_format(const std::vector<std::vector<T> > &matrix, const std::string &file_name) {
+void write_dense_matrix_market_format(const std::vector<std::vector<T> > &matrix, const std::string &file_name) {
     std::ofstream file(file_name);
     file << "%%MatrixMarket matrix coordinate real general" << std::endl;
     file << matrix.size() << " " << matrix[0].size() << " " << matrix.size() * matrix[0].size() << std::endl;
     for (int i = 0; i < matrix.size(); ++i) {
         for (int j = 0; j < matrix[0].size(); ++j) {
-            file << i << " " << j << " " << matrix[i][j] << std::endl;
+            file << matrix[i][j] << std::endl;
         }
     }
     file.close();
@@ -130,6 +130,17 @@ int main(int argc, char *argv[]) {
     if (copy_flag) {
         std::cout << "copy flag is set" << std::endl;
     }
+/*
+    taco::Format dm({taco::Dense,taco::Dense});
+    taco::Tensor<double> m({rows,cols},   dm);
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            m.insert({i,j},i+j);
+        }
+    }
+*/
 
     std::string filename = get_file_name_from_rows_and_cols(rows, cols, true);
     write_file_path += filename;
@@ -139,7 +150,7 @@ int main(int argc, char *argv[]) {
 #if defined(BENCHMARK)
         auto t_begin = std::chrono::high_resolution_clock::now();
 #endif
-        write_matrix_market_format(matrix, write_file_path);
+        write_dense_matrix_market_format(matrix, write_file_path);
 #if defined(BENCHMARK)
         auto t_end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(t_end - t_begin);

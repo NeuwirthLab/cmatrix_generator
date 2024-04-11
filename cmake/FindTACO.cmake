@@ -7,7 +7,7 @@ find_path(
 
 find_library(
         TACO_LIBRARY
-        NAMES libtaco.so
+        NAMES libtaco.dylib libtaco.so
         PATHS "/usr/local/lib"
         PATH_SUFFIXES "lib"
 )
@@ -19,7 +19,8 @@ find_package_handle_standard_args(
 
 if(TACO_FOUND)
     if(NOT TARGET TACO::TACO)
-        add_library(TACO::TACO UNKNOWN IMPORTED GLOBAL)
+        add_library(TACO::TACO UNKNOWN IMPORTED GLOBAL
+                ../taco_matrix_generator.cpp)
         set_target_properties(
                 TACO::TACO PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${TACO_INCLUDE_DIR}
                 IMPORTED_LOCATION ${TACO_LIBRARY}
