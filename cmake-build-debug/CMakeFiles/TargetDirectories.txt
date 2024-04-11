@@ -1,3 +1,0 @@
-/Users/zhaobinzhu/research-stuff/repos/cmatrix-generator/cmake-build-debug/CMakeFiles/cmatrix_generator.dir
-/Users/zhaobinzhu/research-stuff/repos/cmatrix-generator/cmake-build-debug/CMakeFiles/edit_cache.dir
-/Users/zhaobinzhu/research-stuff/repos/cmatrix-generator/cmake-build-debug/CMakeFiles/rebuild_cache.dir
