@@ -10,6 +10,7 @@
 
 #define BENCHMARK
 static int copy_flag = false;
+static int tacoed = false;
 
 
 template<typename T>
@@ -34,6 +35,45 @@ std::vector<std::vector<T> > generate_dense_matrix(int rows, int cols, int num_n
 }
 
 template<typename T>
+taco::Tensor<double> taco_generate_dense_matrix(int rows, int cols, int num_non_zero, int max_value) {
+    taco::Format dm({taco::Dense,taco::Dense});
+    taco::Tensor<double> m({rows,cols},   dm);
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    if (std::is_same<T, int>::value) {
+        std::uniform_int_distribution<int> val_dist(0, max_value);
+        for (int i = 0; i < rows; ++i) {
+            for (int j = 0; j < cols; ++j) {
+                m.insert({i,j},val_dist(gen));
+            }
+        }
+    } else {
+        std::uniform_real_distribution<T> val_dist(0, max_value);
+        for (int i = 0; i < rows; ++i) {
+            for (int j = 0; j < cols; ++j) {
+                m.insert({i,j},val_dist(gen));
+            }
+        }
+    }
+
+    m.pack();
+    return m;
+}
+
+std::ifstream::pos_type get_filesize(const char *filename) {
+    std::ifstream in(filename, std::ifstream::ate | std::ifstream::binary);
+    return in.tellg();
+}
+
+void printFileStats(const std::string& write_file_path, int rows, int cols, const std::chrono::duration<double>& duration) {
+    auto f_size = get_filesize(write_file_path.c_str());
+    std::cout << "Elapsed time: " << duration.count() << " seconds" << std::endl;
+    std::cout << "Matrix dimensions: " << rows << "x" << cols << std::endl;
+    std::cout << "File size (Byte): " << f_size << std::endl;
+    std::cout << "Bandwidth (Byte/s): " << f_size / duration.count() << std::endl;
+}
+
+template<typename T>
 void write_dense_matrix_market_format(const std::vector<std::vector<T> > &matrix, const std::string &file_name) {
     std::ofstream file(file_name);
     file << "%%MatrixMarket matrix array real general" << std::endl;
@@ -52,12 +92,6 @@ void copy_file(const std::string &src, const std::string &dst) {
     dst_file << src_file.rdbuf();
 }
 
-
-std::ifstream::pos_type get_filesize(const char *filename) {
-    std::ifstream in(filename, std::ifstream::ate | std::ifstream::binary);
-    return in.tellg();
-}
-
 std::string get_file_name_from_rows_and_cols(int rows, int cols, bool is_dense) {
     if (is_dense) {
         return "dense_matrix_" + std::to_string(rows) + "x" + std::to_string(cols) + ".mtx";
@@ -72,11 +106,12 @@ int main(int argc, char *argv[]) {
     int cols, rows;
     const char *const short_opts = "i:o:c:r:";
     static const struct option long_opts[] = {
-            {"input",   required_argument, nullptr, 'i'},
+            {"input",   optional_argument, nullptr, 'i'},
             {"output",  required_argument, nullptr, 'o'},
             {"cols",    required_argument, nullptr, 'c'},
             {"rows",    required_argument, nullptr, 'r'},
             {"copy", no_argument, &copy_flag, true},
+            {"tacoed", no_argument, &tacoed, true},
 
 
     };
@@ -90,7 +125,6 @@ int main(int argc, char *argv[]) {
             case 0:
                 if (long_opts[option_index].flag != nullptr)
                     break;
-                printf ("option %s", long_opts[option_index].name);
                 if (optarg)
                     printf (" with arg %s", optarg);
                 printf ("\n");
@@ -119,7 +153,7 @@ int main(int argc, char *argv[]) {
         std::cerr << "no output file path given" << std::endl;
         std::terminate();
     }
-    if (read_file_path.empty()) {
+    if (read_file_path.empty() && copy_flag) {
         std::cerr << "no input file path given" << std::endl;
         std::terminate();
     }
@@ -127,42 +161,47 @@ int main(int argc, char *argv[]) {
         std::cerr << "invalid matrix dimensions" << std::endl;
         std::terminate();
     }
-    if (copy_flag) {
-        std::cout << "copy flag is set" << std::endl;
-    }
-/*
-    taco::Format dm({taco::Dense,taco::Dense});
-    taco::Tensor<double> m({rows,cols},   dm);
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < cols; ++j) {
-            m.insert({i,j},i+j);
-        }
-    }
-*/
 
     std::string filename = get_file_name_from_rows_and_cols(rows, cols, true);
     write_file_path += filename;
     read_file_path += filename;
+
     if (!copy_flag) {
-        std::vector<std::vector<double>> matrix = generate_dense_matrix<double>(cols, rows, cols * rows, 1);
+        std::cout << "Writing the matrix file to: " << write_file_path << std::endl;
+        if (tacoed){
+            taco::Tensor<double> m = taco_generate_dense_matrix<double>(rows, cols, cols * rows, 1);
 #if defined(BENCHMARK)
-        auto t_begin = std::chrono::high_resolution_clock::now();
+            auto t_begin = std::chrono::high_resolution_clock::now();
 #endif
-        write_dense_matrix_market_format(matrix, write_file_path);
+            taco::write(write_file_path, m);
 #if defined(BENCHMARK)
-        auto t_end = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(t_end - t_begin);
-        std::cout << get_filesize((char *) write_file_path.c_str()) << std::endl;
-        std::cout << "Elapsed time for write the matrix " << duration.count() << " seconds" << std::endl;
-        auto f_size = get_filesize((char *) write_file_path.c_str());
-        std::cout << "Matrix dimensions: " << rows << "x" << cols << std::endl;
-        std::cout << "File size (Byte): " << f_size << std::endl;
-        std::cout << "Bandwidth (Byte/s): " << f_size / duration.count() << std::endl;
+            auto t_end = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(t_end - t_begin);
+            printFileStats(write_file_path, rows, cols, duration);
 #endif
+        }else{
+            std::vector<std::vector<double>> matrix = generate_dense_matrix<double>(cols, rows, cols * rows, 1);
+#if defined(BENCHMARK)
+            auto t_begin = std::chrono::high_resolution_clock::now();
+#endif
+            write_dense_matrix_market_format(matrix, write_file_path);
+#if defined(BENCHMARK)
+            auto t_end = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(t_end - t_begin);
+            printFileStats(write_file_path, rows, cols, duration);
+#endif
+        }
+
     } else {
-        std::cout << "copying the file" << std::endl;
+        std::cout << "Copying the matrix file from: " << read_file_path << " to "<< write_file_path << std::endl;
+        if (tacoed){
+            taco::Tensor<double> m = taco_generate_dense_matrix<double>(rows, cols, cols * rows, 1);
+            taco::write(read_file_path, m);
+        }else {
+            std::vector<std::vector<double>> matrix = generate_dense_matrix<double>(cols, rows, cols * rows, 1);
+            write_dense_matrix_market_format(matrix, read_file_path);
+
+        }
 #if defined(BENCHMARK)
         auto t_begin = std::chrono::high_resolution_clock::now();
 #endif
@@ -170,12 +209,7 @@ int main(int argc, char *argv[]) {
 #if defined(BENCHMARK)
         auto t_end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::duration<double>>(t_end - t_begin);
-        std::cout << get_filesize((char *) write_file_path.c_str()) << std::endl;
-        std::cout << "Elapsed time for copy the matrix file " << duration.count() << " seconds" << std::endl;
-        auto f_size = get_filesize((char *) write_file_path.c_str());
-        std::cout << "Matrix dimensions: " << rows << "x" << cols << std::endl;
-        std::cout << "File size (Byte): " << f_size << std::endl;
-        std::cout << "Bandwidth (Byte/s): " << f_size / duration.count() << std::endl;
+        printFileStats(write_file_path, rows, cols, duration);
 #endif
     }
     return 0;
