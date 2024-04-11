@@ -6,7 +6,7 @@
 #include <iomanip>
 #include <getopt.h>
 #include <filesystem>
-
+#include "taco.h"
 
 #define BENCHMARK
 static int copy_flag = false;

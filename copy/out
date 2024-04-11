@@ -1,0 +1,40 @@
+Running program with --rows=10 --cols=10
+option input
+copy flag is set
+copying the file
+1088
+Elapsed time for copy the matrix file 0.00297324 seconds
+Matrix dimensions: 10x10
+File size (Byte): 1088
+Bandwidth (Byte/s): 365931
+Done
+Running program with --rows=100 --cols=100
+option input
+copy flag is set
+copying the file
+122155
+Elapsed time for copy the matrix file 0.00310571 seconds
+Matrix dimensions: 100x100
+File size (Byte): 122155
+Bandwidth (Byte/s): 3.93324e+07
+Done
+Running program with --rows=1000 --cols=1000
+option input
+copy flag is set
+copying the file
+14204188
+Elapsed time for copy the matrix file 0.0333468 seconds
+Matrix dimensions: 1000x1000
+File size (Byte): 14204188
+Bandwidth (Byte/s): 4.25954e+08
+Done
+Running program with --rows=10000 --cols=10000
+option input
+copy flag is set
+copying the file
+1620216976
+Elapsed time for copy the matrix file 7.99117 seconds
+Matrix dimensions: 10000x10000
+File size (Byte): 1620216976
+Bandwidth (Byte/s): 2.02751e+08
+Done
