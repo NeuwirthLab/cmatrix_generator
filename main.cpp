@@ -37,7 +37,7 @@ template<typename T>
 void write_dense_matrix_market_format(const std::vector<std::vector<T> > &matrix, const std::string &file_name) {
     std::ofstream file(file_name);
     file << "%%MatrixMarket matrix coordinate real general" << std::endl;
-    file << matrix.size() << " " << matrix[0].size() << " " << matrix.size() * matrix[0].size() << std::endl;
+    file << matrix.size() << " " << matrix[0].size() << std::endl;
     for (int i = 0; i < matrix.size(); ++i) {
         for (int j = 0; j < matrix[0].size(); ++j) {
             file << matrix[i][j] << std::endl;
