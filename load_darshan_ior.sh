@@ -4,6 +4,8 @@
 tsize="4k 32k 128k 512k 1m 2m"
 bsize="200k 20m 1g 2g"
 output_path="/hdd-share/ior_out/test.out"
+# for HPCA003
+# output_path="/srv/hdd/ior_out/test.out"
 
 
 spack load darshan-runtime@3.4.4
