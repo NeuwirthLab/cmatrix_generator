@@ -3,7 +3,7 @@
 # Define the parameters
 tsize="4k 1m 2m"
 bsize="200k 20m 2g"
-output_path="/hdd-share/ior_out/"
+output_path="/hdd-share/ior_out/test.out"
 
 
 export DARSHAN_ENABLE_NONMPI=1
