@@ -6,9 +6,12 @@ bsize="200k 20m 1g 2g"
 output_path="/hdd-share/ior_out/test.out"
 
 
+spack load darshan-runtime@3.4.4
+export DARSHAN_LOG_DIR_PATH=.
 export DARSHAN_ENABLE_NONMPI=1
+
 spack load ior@3.3.0
-spack load darhan-runtime@3.4.4
+
 
 # Loop through each combination of parameters
 for t in $tsize; do
