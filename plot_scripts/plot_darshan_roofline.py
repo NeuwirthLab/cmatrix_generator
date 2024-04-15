@@ -214,7 +214,7 @@ def draw_roofline(df=None, start=10**-8, end=10**0, df_peaks=None, is_read=False
 
 
 if __name__ == '__main__':
-    root_dir = '../results/consumer01/'
+    root_dir = '../parsed_data'
     df = traverse_directory(root_dir=root_dir, read_darshan_parsed_file=read_darshan_parsed_file)
     root_dir_peak = '../results/consumer_peaks/'
     df_peaks = traverse_directory(root_dir=root_dir_peak, read_darshan_parsed_file=read_darshan_parsed_file)

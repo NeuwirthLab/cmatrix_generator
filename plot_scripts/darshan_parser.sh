@@ -22,7 +22,7 @@ if [ $# -ne 1 ]; then
     echo "Usage: $0 <directory_path>"
     exit 1
 fi
-echo "do something"
+
 export DYLD_LIBRARY_PATH=/usr/lib:$DYLD_LIBRARY_PATH
 # Set the directory path from the argument
 directory_path="$1"
